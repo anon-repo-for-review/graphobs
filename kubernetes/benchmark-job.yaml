@@ -1,0 +1,71 @@
+# Benchmark Runner Job for TimeGraph
+# Runs benchmarks inside the cluster to avoid port-forwarding latency.
+#
+# Build:
+#   cd neo4j_plugin/benchmarks
+#   docker build -t ivo24/timegraph-benchmarks:latest .
+#   docker push ivo24/timegraph-benchmarks:latest
+#
+# Run single-pod benchmarks (default):
+#   kubectl apply -f benchmark-job.yaml
+#
+# Run a specific suite by editing BENCHMARK_SUITE below,
+# or override with:
+#   kubectl delete job timegraph-benchmark 2>/dev/null
+#   kubectl apply -f benchmark-job.yaml
+#
+# View results:
+#   kubectl logs job/timegraph-benchmark --follow
+#
+# Copy CSV files:
+#   kubectl cp $(kubectl get pod -l job-name=timegraph-benchmark -o name | head -1):/results ./benchmark-results/
+#
+# Clean up:
+#   kubectl delete job timegraph-benchmark
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: timegraph-benchmark
+  labels:
+    app: timegraph-benchmark
+    app.kubernetes.io/part-of: opentelemetry-demo
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400  # auto-cleanup after 24h
+  template:
+    metadata:
+      labels:
+        app: timegraph-benchmark
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: benchmark
+          image: ivo24/timegraph-benchmarks:vi5
+          imagePullPolicy: Always
+          args:
+            - "run_all.py"
+            - "--suite"
+            - "all"
+            # For pick mode, uncomment and list specific benchmarks:
+            # - "--benchmarks"
+            # - "get_time_series"
+            # - "jaeger_traces"
+          env:
+            - name: NEO4J_URI
+              value: "bolt://timegraph:7687"
+            - name: NEO4J_PASSWORD
+              value: "timegraph123"
+            - name: PROMETHEUS_URL
+              value: "http://prometheus:9090"
+            - name: JAEGER_URL
+              value: "http://jaeger-query:16686"
+            - name: OPENSEARCH_URL
+              value: "http://opensearch:9200"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

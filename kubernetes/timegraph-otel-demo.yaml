@@ -1,0 +1,165 @@
+# TimeGraph Neo4j Integration for OpenTelemetry Demo
+# Deploy this AFTER installing the OTel Demo in the same namespace
+#
+# Usage:
+#   1. Install OTel Demo: helm install otel-demo open-telemetry/opentelemetry-demo
+#   2. Deploy TimeGraph: kubectl apply -f timegraph-otel-demo.yaml
+#
+# The service URLs are based on default OTel Demo Helm release name "otel-demo"
+# Adjust if you used a different release name
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: timegraph-config
+  labels:
+    app: timegraph
+    app.kubernetes.io/part-of: opentelemetry-demo
+data:
+  # Adjust these if your OTel Demo uses a different release name
+  # Format: <release-name>-<component>.<namespace>.svc.cluster.local
+  PROMETHEUS_URL: "http://prometheus:9090"
+  JAEGER_URL: "http://jaeger-query:16686"
+  OPENSEARCH_URL: "http://opensearch:9200"
+  OPENSEARCH_USER: ""
+  OPENSEARCH_PASSWORD: ""
+  OPENSEARCH_INDEX: "otel-logs-*"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timegraph
+  labels:
+    app: timegraph
+    app.kubernetes.io/part-of: opentelemetry-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: timegraph
+  template:
+    metadata:
+      labels:
+        app: timegraph
+        app.kubernetes.io/part-of: opentelemetry-demo
+    spec:
+      containers:
+        - name: neo4j
+          image: ivo24/timegraph-neo4j:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 7474
+              protocol: TCP
+            - name: bolt
+              containerPort: 7687
+              protocol: TCP
+          env:
+            - name: NEO4J_AUTH
+              value: "neo4j/12345678"
+            - name: NEO4J_dbms_security_procedures_unrestricted
+              value: "*"
+            - name: NEO4J_dbms_security_procedures_allowlist
+              value: "*"
+            # Data source URLs from ConfigMap
+            - name: PROMETHEUS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: timegraph-config
+                  key: PROMETHEUS_URL
+            - name: JAEGER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: timegraph-config
+                  key: JAEGER_URL
+            - name: OPENSEARCH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: timegraph-config
+                  key: OPENSEARCH_URL
+            - name: OPENSEARCH_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: timegraph-config
+                  key: OPENSEARCH_USER
+            - name: OPENSEARCH_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: timegraph-config
+                  key: OPENSEARCH_PASSWORD
+            - name: OPENSEARCH_INDEX
+              valueFrom:
+                configMapKeyRef:
+                  name: timegraph-config
+                  key: OPENSEARCH_INDEX
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "3Gi"
+              cpu: "1500m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 7474
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 7474
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: timegraph
+  labels:
+    app: timegraph
+    app.kubernetes.io/part-of: opentelemetry-demo
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 7474
+      targetPort: 7474
+      protocol: TCP
+    - name: bolt
+      port: 7687
+      targetPort: 7687
+      protocol: TCP
+  selector:
+    app: timegraph
+
+---
+# Optional: Expose Neo4j Browser via NodePort for external access
+# Uncomment if needed
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: timegraph-external
+#   labels:
+#     app: timegraph
+# spec:
+#   type: NodePort
+#   ports:
+#     - name: http
+#       port: 7474
+#       targetPort: 7474
+#       nodePort: 30474
+#     - name: bolt
+#       port: 7687
+#       targetPort: 7687
+#       nodePort: 30687
+#   selector:
+#     app: timegraph

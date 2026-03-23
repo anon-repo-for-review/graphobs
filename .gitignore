@@ -1,0 +1,21 @@
+# Build artifacts
+neo4j_plugin/target/
+*.class
+*.jar
+
+# Maven
+.mvn/
+!**/src/main/**/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Benchmark results
+neo4j_plugin/benchmarks/*.csv
+neo4j_plugin/benchmarks/__pycache__/
+
+# OS
+.DS_Store
+Thumbs.db
