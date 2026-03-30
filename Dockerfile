@@ -8,7 +8,7 @@ COPY neo4j_plugin/target/neo4j_plugin-1.0-SNAPSHOT.jar /var/lib/neo4j/plugins/
 
 # Neo4j configuration
 ENV NEO4J_AUTH=neo4j/graphobs123
-ENV NEO4J_PLUGINS='["apoc"]'
+ENV NEO4J_PLUGINS='["apoc", "graph-data-science"]'
 
 # Allow all custom procedures (graphobs.*)
 ENV NEO4J_dbms_security_procedures_unrestricted=*
