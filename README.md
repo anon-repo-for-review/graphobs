@@ -12,14 +12,21 @@ This repository demonstrates GraphObs in combination with the [OpenTelemetry Dem
 
 ## Installation
 
-### 1. Add Helm Repository
+### 1. Clone this repository
+
+```bash
+git clone https://github.com/anon-repo-for-review/graphobs.git
+cd graphobs
+```
+
+### 2. Add Helm Repository
 
 ```bash
 helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
 helm repo update
 ```
 
-### 2. Deploy OpenTelemetry Demo
+### 3. Deploy OpenTelemetry Demo
 
 ```bash
 kubectl apply -f kubernetes/grafana-neo4j-datasource.yaml
@@ -27,7 +34,7 @@ kubectl apply -f kubernetes/grafana-dashboard-configmap.yaml
 helm install otel-demo open-telemetry/opentelemetry-demo -f kubernetes/values-grafana-neo4j.yaml
 ```
 
-### 3. Deploy GraphObs
+### 4. Deploy GraphObs
 
 ```bash
 kubectl apply -f kubernetes/graphobs.yaml
@@ -48,7 +55,7 @@ kubectl get pods -w
 kubectl port-forward svc/graphobs 7474:7474 7687:7687
 
 # Grafana
-kubectl port-forward svc/grafana 3000:80
+kubectl port-forward svc/otel-demo-grafana 3000:80
 ```
 
 ### URLs
