@@ -1,5 +1,5 @@
-# TimeGraph Neo4j Plugin Docker Image
-# Integrates with Prometheus and Jaeger for observability data
+# GraphObs Neo4j Plugin Docker Image
+# Integrates with Prometheus, Jaeger and OpenSearch for observability data
 
 FROM neo4j:2025-community
 
@@ -7,10 +7,10 @@ FROM neo4j:2025-community
 COPY neo4j_plugin/target/neo4j_plugin-1.0-SNAPSHOT.jar /var/lib/neo4j/plugins/
 
 # Neo4j configuration
-ENV NEO4J_AUTH=neo4j/timegraph123
+ENV NEO4J_AUTH=neo4j/graphobs123
 ENV NEO4J_PLUGINS='["apoc"]'
 
-# Allow all custom procedures (timegraph.* and graphobs.*)
+# Allow all custom procedures (graphobs.*)
 ENV NEO4J_dbms_security_procedures_unrestricted=*
 ENV NEO4J_dbms_security_procedures_allowlist=*
 
