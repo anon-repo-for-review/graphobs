@@ -1,39 +1,39 @@
 # ============================================================
-# TimeGraph Neo4j Extension for OpenTelemetry Demo
+# GraphObs Neo4j Extension for OpenTelemetry Demo
 # ============================================================
 # Append this to the end of:
 # https://github.com/open-telemetry/opentelemetry-demo/blob/main/kubernetes/opentelemetry-demo.yaml
 #
 # Or apply separately after the OTel Demo:
-#   kubectl apply -f timegraph-extension.yaml -n otel-demo
+#   kubectl apply -f graphobs.yaml -n otel-demo
 # ============================================================
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: timegraph
+  name: graphobs
   namespace: default
   labels:
-    app.kubernetes.io/component: timegraph
+    app.kubernetes.io/component: graphobs
     app.kubernetes.io/instance: otel-demo
-    app.kubernetes.io/name: otel-demo-timegraph
+    app.kubernetes.io/name: otel-demo-graphobs
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/component: timegraph
+      app.kubernetes.io/component: graphobs
       app.kubernetes.io/instance: otel-demo
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: timegraph
+        app.kubernetes.io/component: graphobs
         app.kubernetes.io/instance: otel-demo
-        app.kubernetes.io/name: otel-demo-timegraph
+        app.kubernetes.io/name: otel-demo-graphobs
     spec:
       containers:
         - name: neo4j
-          image: ivo24/timegraph-neo4j:latest
+          image: graph174/graphobs:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 7474
@@ -44,7 +44,7 @@ spec:
               protocol: TCP
           env:
             - name: NEO4J_AUTH
-              value: "neo4j/timegraph123"
+              value: "neo4j/graphobs123"
             - name: NEO4J_dbms_security_procedures_unrestricted
               value: "*"
             - name: NEO4J_dbms_security_procedures_allowlist
@@ -92,12 +92,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: timegraph
+  name: graphobs
   namespace: default
   labels:
-    app.kubernetes.io/component: timegraph
+    app.kubernetes.io/component: graphobs
     app.kubernetes.io/instance: otel-demo
-    app.kubernetes.io/name: otel-demo-timegraph
+    app.kubernetes.io/name: otel-demo-graphobs
 spec:
   type: ClusterIP
   ports:
@@ -110,5 +110,5 @@ spec:
       targetPort: 7687
       protocol: TCP
   selector:
-    app.kubernetes.io/component: timegraph
+    app.kubernetes.io/component: graphobs
     app.kubernetes.io/instance: otel-demo
